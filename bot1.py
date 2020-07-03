@@ -437,7 +437,7 @@ async def help(ctx):
 	emb = discord.Embed(title = 'Все команды', colour=discord.Color.blue())
 	emb.add_field(name = 'profile', value = 'Просмотр своего профиля')
 	emb.add_field(name = 'user', value = 'Просмотр профиля друга')
-	emb.add_field(name = 'mute', value = 'Мут пользователю')
+	emb.add_field(name = 'mute', value = 'Мут пользователю в сикундах')
 	emb.add_field(name = 'report', value = 'Жалоба на подсудимого')
 	emb.add_field(name = '$, bal, balance', value = 'Баланс ваш или просмотр чужого баланса')
 	emb.add_field(name = 'shop', value = 'Магазин')
