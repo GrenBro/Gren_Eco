@@ -366,6 +366,64 @@ async def coin_flip(ctx, amount, arg):
 	 await message.remove_reaction(payload.emoji, member)
 	 print('[SUCCESS] Too many roles for user {0.display_name}'.format(member)'''
 
+@client.command()
+async def rep(ctx, member: discord.Member = None):
+    if member is None:
+        await ctx.send(f'{ctx.author.mention}, вы не указали пользователя!')
+    elif ctx.author == member:
+        await ctx.send(f'{ctx.author.mention}, ты конечно извени но себе ты не сможешь дать репу!')
+    else:
+        cursor.execute("UPDATE users SET rep = rep + {} WHERE id = {}".format(1, member.id))
+        connection.commit()
+        emb = discord.Embed(title = '**Успешно!**', description = f"""У пользователя {member.name} была повышена репутация!\nТекущия репутация: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0]}!""")
+        await ctx.send(embed = emb)
+ 
+        if cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 20:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 30:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 40:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 50:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 60:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 70:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 80:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 90:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+ 
+        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 100:
+            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+            connection.commit()
+            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
+
+
 token = os.environ.get("BOT_TOKEN")
 
 client.run( token )
