@@ -1,0 +1,371 @@
+import discord
+from discord.ext import commands, tasks
+from itertools import cycle
+from discord.utils import get
+import discord.ext.commands
+import urllib.parse, urllib.request, re
+from discord.ext import commands, tasks
+import sqlite3
+from discord.utils import get
+import random
+import asyncio
+
+import config
+
+client = commands.Bot(command_prefix= '.') 
+client.remove_command( 'help' ) 
+
+
+@client.event
+async def on_ready():
+	change_status.start()
+	connection.commit()
+	print('Bot online')
+	print(client.user.id)
+	print('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬')
+
+
+connection = sqlite3.connect('server.db')
+cursor = connection.cursor()
+connection.commit()
+
+
+@client.event
+async def on_ready():
+	cursor.execute("""CREATE TABLE IF NOT EXISTS users (
+		name TEXT,
+		id INT,
+		cash BIGINT,
+		rep INT,
+		lvl INT
+	)""")
+	connection.commit()
+
+	cursor.execute("""CREATE TABLE IF NOT EXISTS shop (
+		role_id INT,
+		id INT,
+		cost BIGINT
+		)""")
+
+
+
+	for guild in client.guilds:
+		for member in guild.members:
+			if cursor.execute(f"SELECT id FROM users WHERE id = {member.id}").fetchone() is None:
+				cursor.execute(f"INSERT INTO users VALUES ('{member}', {member.id}, 0, 0, 1)")
+				connection.commit()
+			else:
+				pass
+
+
+@client.event
+async def on_member_join(member):
+	if cursor.execute(f"SELECT id FROM users WHERE id = {member.id}").fetchone() is None:
+		cursor.execute(f"INSERT INTO users VALUES ('{member}', {member.id}, 0, 0, 1)")
+		connection.commit()
+	else:
+		pass
+
+
+@client.command(aliases = ['add-shop'])
+@commands.has_permissions( administrator = True )
+async def __add_shop(ctx, role: discord.Role = None, cost: int = None):
+	if role is None:
+		await ctx.send(f"**{ctx.author}**, укажите роль, которую хотите добавить!")
+	else:
+		if cost is None:
+			await ctx.send(f"**{ctx.author}**, укажите стоимость роли!")
+		elif cost < 0:
+			await ctx.send(f"**{ctx.author}**, укажите стоимость выше!")
+		else:
+			cursor.execute("INSERT INTO shop VALUES ({}, {}, {})".format(role.id, ctx.guild.id, cost))
+			connection.commit()
+			emb = discord.Embed(title = 'Успешно', description = 'Роль была успешно добавлена в магазин!:white_check_mark:', colour = discord.Color.green())
+			await ctx.send(embed=emb)
+
+
+@client.command(aliases = ['remove-shop'])
+@commands.has_permissions( administrator = True )
+async def __remove_shop(ctx, role: discord.Role = None):
+	if role is None:
+		await ctx.send(f"**{ctx.author}**, укажите роль, которую хотите удалить")
+	else:
+		cursor.execute("DELETE FROM shop WHERE role_id = {}".format(role.id))
+		connection.commit()
+		emb = discord.Embed(title = 'Успешно', description = 'Роль была успешно Удалена с магазина!:white_check_mark:', colour = discord.Color.red())
+		await ctx.send(embed=emb)
+
+
+@client.command(aliases = ['shop'])
+async def __shop(ctx):
+	embed = discord.Embed(title = 'Магаз')
+
+	for row in cursor.execute("SELECT role_id, cost FROM shop WHERE id = {}".format(ctx.guild.id)):
+		if ctx.guild.get_role(row[0]) != None:
+			embed.add_field(
+				name = f"Стоимость {row[1]}",
+				value = f"Роль {ctx.guild.get_role(row[0]).mention}",
+				inline = False 
+			)
+		else:
+						pass
+
+	await ctx.send(embed = embed)
+
+
+
+@client.command(aliases = ['buy', 'buy role'])
+async def __buy(ctx, role: discord.Role = None):
+	if role is None:
+		await ctx.send(f"**{ctx.author}**, укажите роль")
+	else:
+		if role in ctx.author.roles:
+			await ctx.send(f"**{ctx.author}**, у вас эта роль уже имеется")
+		elif cursor.execute("SELECT cost FROM shop WHERE role_id = {}".format(role.id)).fetchone()[0] > cursor.execute("SELECT cash FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]:
+			await ctx.send(f"**{ctx.author}, у вас недостаточно средств**")
+		else:
+			await ctx.author.add_roles(role)
+			cursor.execute("UPDATE users SET cash = cash - {0} WHERE id = {1}".format(cursor.execute("SELECT cost FROM shop WHERE role_id = {}".format(role.id)).fetchone()[0], ctx.author.id))
+			connection.commit()
+
+@client.command()
+async def report(ctx, member:discord.Member=None, *, arg=None):
+	message = ctx.message
+	channel = client.get_channel(473885901626540032)    
+	if member == None:
+		await ctx.send(embed=discord.Embed(description='Укажите пользователя!', color=discord.Color.red()))
+	elif arg == None:
+		await ctx.send(embed=discord.Embed(description='Укажите причину жалобы!', color=discord.Color.red()))
+	else:
+		emb = discord.Embed(title=f'Жалоба на пользователя {member}', color=discord.Color.blue())
+		emb.add_field(name='Автор жалобы:', value=f'*{ctx.author}*')
+		emb.add_field(name='Причина:', value='*' +arg + '*')
+		emb.add_field(name='ID жалобы:', value=f'{message.id}')
+		await channel.send(embed=emb)
+		await ctx.author.send('✅ Ваша жалоба успешно отправлена!')
+
+@client.command(aliases = ['balance', '$', 'bal'])
+async def __balance(ctx, member: discord.Member = None):
+	if member is None:
+		await ctx.send(embed = discord.Embed(
+			description = f"""Баланс пользователя **{ctx.author}** состовляет **{cursor.execute("SELECT cash FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]} 💰**"""
+		))
+	else:
+		await ctx.send(embed = discord.Embed(
+		description = f"""Баланс пользователя **{member}** состовляет **{cursor.execute("SELECT cash FROM users WHERE id = {}".format(member.id)).fetchone()[0]} 💰**"""
+	))
+	connection.commit()
+
+@client.command()
+async def run(ctx, member: discord.Member = None, amount: int = 3000):
+	emb = discord.Embed(title = '**Гонка!!**', description = f'Пользователь: {ctx.author.name}, бросил вызов в гонке пользователю: {member.mention}! Гонка началась! Ожидайте 5 секунд', colour = discord.Color.red())
+	await ctx.send(embed = emb)
+	await asyncio.sleep(5)
+	a = random.randint(1, 2)
+	embb = discord.Embed(title =  'Итоги!', description = f'**В соревнование:** {ctx.author.mention} и {member.mention}!\n **Побеждает:** {ctx.author.mention}!!\n **Поздравим!**\n **Его счёт пополнен на 1000**💰', colour = discord.Color.blue())
+	embbb = discord.Embed(title =  'Итоги!', description = f'**В соревнование:** {ctx.author.mention} и {member.mention}!\n **Побеждает:** {member.mention}!!\n **Поздравим!**\n **Его счёт пополнен на 1000**💰**', colour = discord.Color.red())
+	if a == 1:
+		await ctx.send(embed = embb)
+		cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, ctx.author.id))
+		connection.commit()
+	else:
+		await ctx.send(embed = embbb)
+		cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, member.id))
+		connection.commit()
+
+@client.command()
+async def kiss(ctx, member: discord.Member):
+	emb = discord.Embed(title = '💋Поцелуй!💋', description = f'**Пользователь: ``{ctx.author.name}``, поцеловал { member.mention }!💋**', colour = discord.Color.red())
+	emb.set_thumbnail(url = 'https://d.radikal.ru/d43/2006/76/fb8f09103a8f.gif')
+	await ctx.send( embed = emb )
+
+@client.command()
+async def hug(ctx, member: discord.Member):
+	emb = discord.Embed(title = '**Объятия!**', description = f'**Пользователь: {ctx.author.name}, обнял: {member.mention}!**', colour = discord.Color.blue())
+
+	await ctx.send(embed = emb)
+
+@client.command()
+async def mute(ctx, member: discord.Member, duration: int, *, arg):
+	emb = discord.Embed(title='MUTE')
+	role = discord.utils.get(ctx.guild.roles, name='Muted')
+	emb.add_field(name="Замутил:",
+				  value=f'{ctx.author.mention} __**замутил**__: {member.mention} __**на {duration} секунд.**__')
+	emb.add_field(name="Причина:", value=f'__*{arg}*__')
+	await ctx.send(embed=emb)
+	await member.add_roles(role)
+	await asyncio.sleep(duration)
+	embed = discord.Embed(description=f'Товарищ {member.mention} успешно прошёл курс оздаровления от мута).',
+						  color=discord.Colour.green())
+	await ctx.send(embed=embed)
+	await member.remove_roles(role)
+
+@client.command(pass_context=True)
+async def profile(ctx):
+	roles = ctx.author.roles
+	role_list = ""
+	for role in roles:
+		role_list += f"<@&{role.id}> "
+	emb = discord.Embed(title='Profile', colour = discord.Colour.purple())
+	emb.set_thumbnail(url=ctx.author.avatar_url)
+	emb.add_field(name='Никнэйм', value=ctx.author.mention)
+	emb.add_field(name="Активность", value=ctx.author.activity)
+	emb.add_field(name='Роли', value=role_list)
+	emb.add_field(name='Присоеденился к серверу', value=ctx.author.joined_at.strftime('%Y.%m.%d \n %H:%M:%S'))
+	emb.add_field(name='Присоеденился к Discord', value=ctx.author.created_at.strftime("%Y.%m.%d %H:%M:%S"))
+	if 'online' in ctx.author.desktop_status:
+		emb.add_field(name="Устройство", value=":computer:Компьютер:computer:")
+	elif 'online' in ctx.author.mobile_status:
+		emb.add_field(name="Устройство", value=":iphone:Телефон:iphone:")
+	elif 'online' in ctx.author.web_status:
+		emb.add_field(name="Устройство", value=":globe_with_meridians:Браузер:globe_with_meridians:")
+	emb.add_field(name="Статус", value=ctx.author.status)
+	emb.add_field(name='Id', value=ctx.author.id)
+	await ctx.channel.purge(limit=1)
+	await ctx.send(embed = emb )
+
+@client.command(aliases = ["user"])
+async def __user(ctx, member: discord.Member = None):
+	roles = member.roles
+	role_list = ""
+	for role in roles:
+		role_list += f"<@&{role.id}> "
+		emb = discord.Embed(title='Profile', colour = discord.Colour.purple())
+		emb.set_thumbnail(url=member.avatar_url)
+		emb.add_field(name='Никнэйм', value=member.mention)
+		emb.add_field(name="Активность", value=member.activity)
+		emb.add_field(name='Роли', value=role_list)
+		emb.add_field(name='Присоеденился к серверу', value=member.joined_at.strftime('%Y.%m.%d \n %H:%M:%S'))
+		emb.add_field(name='Присоеденился к Discord', value=member.created_at.strftime("%Y.%m.%d %H:%M:%S"))
+		if 'online' in member.desktop_status:
+			emb.add_field(name="Устройство", value=":computer:Компьютер:computer:")
+		elif 'online' in member.mobile_status:
+			emb.add_field(name="Устройство", value=":iphone:Телефон:iphone:")
+		elif 'online' in member.web_status:
+			emb.add_field(name="Устройство", value=":globe_with_meridians:Браузер:globe_with_meridians:")
+		emb.add_field(name="Статус", value=member.status)
+		emb.add_field(name='Id', value=member.id)
+		await ctx.channel.purge(limit=1)
+		await ctx.send(embed = emb )
+
+@client.command(aliases = ['work'])
+@commands.cooldown(1, 600, commands.BucketType.user)
+async def __work(ctx):
+	for row in cursor.execute(f"SELECT cash FROM users WHERE id={ctx.author.id}"):
+	  LVL = row[0]
+	  amount = random.randint(500, 5000)
+	  await ctx.send(embed=discord.Embed(description=f'Ты заработал {amount} на работе! 🟢 (команда будет доступна через 10 мин.)'))
+
+	LVL += amount
+
+	cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id={ctx.author.id}")
+	connection.commit()
+
+
+@client.command(aliases = ['add'])
+@commands.has_permissions( administrator = True )
+async def __add(ctx, member: discord.Member = None, amout: int = None):
+	if member is None:
+		await ctx.send(f"**{ctx.author}**, укажите пользователя")
+	else:
+		if amout is None:
+			await ctx.send(f"**{ctx.author}**, укажите сумму!")
+		elif amout < 1:
+			await ctx.send(f"**{ctx.author}**, Укажи сумму больше 1")
+		else:
+			cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amout, member.id))
+			connection.commit()
+
+
+@client.command(aliases = ['take'])
+@commands.has_permissions( administrator = True )
+async def __t(ctx, member: discord.Member = None, amount = None):
+	if member is None:
+		await ctx.send(f"**{ctx.author}**, укажите пользователя")
+	else:
+		if amount is None:
+			await ctx.send(f"**{ctx.author}**, укажите сумму!")
+		elif amount =='all':
+			cursor.execute("UPDATE users SET cash = {} WHERE id = {}".format(0, member.id))
+			connection.commit()
+
+		elif amout < 1:
+			await ctx.send(f"**{ctx.author}**, Укажи сумму больше 1")
+		else:
+			cursor.execute("UPDATE users SET cash = cash - {} WHERE id = {}".format(int(amount), member.id))
+			connection.commit()
+
+@client.command()
+@commands.has_permissions( administrator = True )
+async def clear(ctx, amount=None):
+	await ctx.channel.purge(limit=int(amount))
+	await ctx.channel.send(':: Сообщения успешно удалены ::')
+
+#econom
+
+@client.command(aliases = ['casino', 'cs'])
+async def __casino(ctx, amount: int = None):
+	if amount == None:
+		pass
+	else:
+		for row in cursor.execute(f"SELECT cash FROM users WHERE id={ctx.author.id}"):
+			LVL = row[0]
+			if amount > LVL:
+				await ctx.send('У тебя недостаточно средств')
+			else:
+				a = random.randint(1,2)
+				if a == 1:
+					await ctx.send('Ты победил :moneybag:')
+					LVL += amount
+					cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id = {ctx.author.id}")
+					connection.commit()
+				else:
+					await ctx.send('Ты проиграл :moneybag:')
+					LVL -= amount
+					cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id = {ctx.author.id}")
+					connection.commit()
+
+
+@client.command(aliases =['монетка', 'bf'])
+async def coin_flip(ctx, amount, arg):
+	a = random.randint(0, 1)
+	if a == 0:
+		cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, ctx.author.id))
+		connection.commit()
+		embed = discord.Embed(title = f'**Орёл или Решка | {ctx.author.name}**', description = 'Результаты игры в орёл и решку' )
+		embed.add_field(name = 'Ставка', value = f'```{amount}```')
+		embed.add_field(name = 'Выбор', value = f'```{arg}```')
+		embed.add_field(name = 'Результ', value = '```Вы выйграли```', inline = False)
+		embed.set_footer(text = f'Ваш баланс составляет: {cursor.execute(f"SELECT cash FROM users WHERE id = {ctx.author.id}").fetchone()[0]} :💰:')
+		await ctx.send(embed = embed)
+	elif a == 1:
+		cursor.execute("UPDATE users SET cash = cash - {} WHERE id = {}".format(amount, ctx.author.id))
+		connection.commit()
+		embed = discord.Embed(title = f'**Орёл или Решка | {ctx.author.name}**', description = 'Результаты игры в орёл и решку' )
+		embed.add_field(name = 'Ставка', value = f'```{amount}```')
+		embed.add_field(name = 'Выбор', value = f'```{arg}```')
+		embed.add_field(name = 'Результ', value = '```Вы проиграли```', inline = False)
+		embed.set_footer(text = f'Ваш баланс составляет: {cursor.execute(f"SELECT cash FROM users WHERE id = {ctx.author.id}").fetchone()[0]} :💰:')
+		await ctx.send(embed = embed)
+
+#print('Logged on as {0}!'.format(self.user))
+
+'''async def on_raw_reaction_add(self, payloada, user):
+	chananel = self.get_channel(payloada.channel_id)  # получаем обьект канала
+	message = await channel.fetch_message(payload.message_id) # получаем обьект сообщения
+	member = utils.get(message.guild.member, id=payload.user_id) # получаем обьект пользователя который поставил реакцию
+
+	try:
+		emoji = str(payload.emoji) # эмоджик который выбрал юзер
+		role = utils.get(message.guild.roles, id=config.Roles[emoji]) # обьект выбранной роли (если есть)
+
+	if(len([i for i in member.roles if i.id not in config.EXCROLES]) <=config.MAX_ROLES_PER_USER):
+		await member_roles(role)
+		print('SUCCESS] User {0.display_name} has been granled with role {1.name}'.format)
+	else:
+	 await message.remove_reaction(payload.emoji, member)
+	 print('[SUCCESS] Too many roles for user {0.display_name}'.format(member)'''
+
+token = os.environ.get("BOT_TOKEN")
+
+client.run( token )
