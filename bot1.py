@@ -423,6 +423,34 @@ async def rep(ctx, member: discord.Member = None):
             connection.commit()
             await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}')
 
+@client.command()
+async def getrep(ctx, member: discord.Member = None):
+    if member is None:
+        emb = discord.Embed(title = '**Репутация**', description = f'**{ctx.author.name}, ваша репутация: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]}!**', colour = discord.Color.red())
+        await ctx.send(embed = emb)
+    else:
+        emb1 = discord.Embed(title = '**Репутация**', description = f'**Репутация участника {member.mention}: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0]}!**', colour = discord.Color.red())
+        await ctx.send(embed = emb1)
+
+@client.command()
+async def help(ctx):
+	emb = discord.Embed(title = 'Все команды', colour=discord.Color.blue())
+	emb.add_field(name = 'profile', value = 'Просмотр своего профиля')
+	emb.add_field(name = 'user', value = 'Просмотр профиля друга')
+	emb.add_field(name = 'mute', value = 'Мут пользователю')
+	emb.add_field(name = 'report', value = 'Жалоба на подсудимого')
+	emb.add_field(name = '$, bal, balance', value = 'Баланс ваш или просмотр чужого баланса')
+	emb.add_field(name = 'shop', value = 'Магазин')
+	emb.add_field(name = 'work', value = 'Работа за нее вам заплатят деньги от 500 до 5000 кд 10м')
+	emb.add_field(name = 'bf', value = 'Орёл или Рёшка игра ставка от 50')
+	emb.add_field(name = 'cs, casino', value = 'Казино')
+	emb.add_field(name = 'run', value = 'Вызов на гонку человека')
+	emb.add_field(name = 'hug', value = 'Обнять человека')
+	emb.add_field(name = 'kiss', value = '💋Поцелуй человека который нравиться')
+	emb.add_field(name = 'buy', value = 'Покупка роли упаминание роли после команды')
+	emb.add_field(name = 'rep', value = '+Репутцаия чеовеку которого вы упамянули')
+	emb.add_field(name = 'getrep', value = 'Посмотреть сколько репы у вас или у друга')
+	await ctx.send(embed = emb)
 
 token = os.environ.get("BOT_TOKEN")
 
