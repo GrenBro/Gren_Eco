@@ -9,7 +9,7 @@ import sqlite3
 from discord.utils import get
 import random
 import asyncio
-
+import os
 import config
 
 client = commands.Bot(command_prefix= '.') 
