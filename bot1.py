@@ -10,7 +10,7 @@ from discord.utils import get
 import random
 import asyncio
 import os
-from config import settings
+import config
 
 client = commands.Bot(command_prefix= '.') 
 client.remove_command( 'help' ) 
@@ -304,156 +304,59 @@ async def clear(ctx, amount=None):
 #econom
 
 
-@client.command(aliases=['betroll'])
-async def br(ctx, amount: int = None):
-    number = random.randint(1, 50)
-    if amount is None:
-        await ctx.send(embed = discord.Embed(description = f"**{ctx.author.mention}**, укажите сумму!", color=0xc40d11))
-    else:
-        if amount < 0:
-            await ctx.send(embed = discord.Embed(description = f"**{ctx.author.mention}**, вы не можете испытать удачу, играя на **0** коинов!", color=0xc40d11))
-        elif cursor.execute("SELECT cash FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0] < amount:
-            await ctx.send(embed = discord.Embed(description = f"**{ctx.author.mention}**, на вашем балансе не хватает коинов для ставки!", color=0xc40d11))
-        else:
-            cursor.execute("UPDATE users SET cash = cash - {} WHERE id = {}".format(amount, ctx.author.id))
-            connection.commit()
-            if number > 74:
-                cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(int(amount *2), ctx.author.id))
-                connection.commit()
-                await ctx.send(embed = discord.Embed(description = f"**{ctx.author.mention}**, выпало число **{number}**! Ты выйграл **{amount *2}** коинов!", color=0x179c87))
-            else:
-                await ctx.send(embed = discord.Embed(description = f"**{ctx.author.mention}**, выпало число **{number}**! Ты проиграл **{amount}** коинов!", color=0xc40d11))
+@client.command(aliases = ['casino', 'cs'])
+async def __casino(ctx, amount: int = None):
+	if amount == None:
+		pass
+	else:
+		for row in cursor.execute(f"SELECT cash FROM users WHERE id={ctx.author.id}"):
+			LVL = row[0]
+			if amount > LVL:
+				await ctx.send('У тебя недостаточно средств')
+			else:
+				a = random.randint(1,2)
+				if a == 1:
+					await ctx.send('Ты победил :moneybag:')
+					LVL += amount
+					cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id = {ctx.author.id}")
+					connection.commit()
+				else:
+					await ctx.send('Ты проиграл :moneybag:')
+					LVL -= amount
+					cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id = {ctx.author.id}")
+					connection.commit()
 
 @client.command()
 async def duel(ctx, member: discord.Member = None, amount: int = None ):
-    a = random.randint(1, 2)
-    if ctx.author == member:
-        await ctx.send("С собой то вам зачем сражаться?")
-        return
-    if member is None:
-        await ctx.send('укажите пользователя с которым хотите саревноваться')
-    elif amount is None:
-        await ctx.send('Укажите сумму за которую хотите биться!')
-    elif amount > cursor.execute("SELECT cash FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]:
-        await ctx.send(f'У вас не достаточно денег не балансе {PREFIX}cash!')
-    elif amount > cursor.execute("SELECT cash FROM users WHERE id = {}".format(member.id)).fetchone()[0]:
-        await ctx.send(f'На балансе вашего противника не хватает денег! {PREFIX}cash!')
-    else:
-        emb = discord.Embed(title = 'Бой', description = f'**Пользователь: {ctx.author.mention}, кинул вызов пользователю: {member.mention}!\n Бой начался!(ожидайте 15 секунд)**')
-        await ctx.send(embed = emb)
-        await asyncio.sleep(5)
+	a = random.randint(1, 2)
+	if ctx.author == member:
+		await ctx.send("С собой то вам зачем сражаться?")
+		return
+	if member is None:
+		await ctx.send('укажите пользователя с которым хотите саревноваться')
+	elif amount is None:
+		await ctx.send('Укажите сумму за которую хотите биться!')
+	elif amount > cursor.execute("SELECT cash FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]:
+		await ctx.send(f'У вас не достаточно денег не балансе {PREFIX}cash!')
+	elif amount > cursor.execute("SELECT cash FROM users WHERE id = {}".format(member.id)).fetchone()[0]:
+		await ctx.send(f'На балансе вашего противника не хватает денег! {PREFIX}cash!')
+	else:
+		emb = discord.Embed(title = 'Бой', description = f'**Пользователь: {ctx.author.mention}, кинул вызов пользователю: {member.mention}!\n Бой начался!(ожидайте 5 секунд)**')
+		await ctx.send(embed = emb)
+		await asyncio.sleep(5)
 
 
-        if a == 1:
-            emb1 = discord.Embed(title = '**Итоги!**', description = f'**И так!\nВ этом бою побеждает....\n{ctx.author.mention}!!!!\nПоздравим! Он получает {amount}:leaves:!**')
-            cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, ctx.author.id))
-            connection.commit()
-            await ctx.send( embed = emb1 )
-        else:
-            emb2 = discord.Embed(title = '**Итоги!**', description = f'**И так!\nВ этом бою побеждает....\n{member.mention}!!!!\nПоздравим! Он получает {amount}:leaves:!**')
-            cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, member.id))
-            connection.commit()
-            await ctx.send( embed = emb2 )
+		if a == 1:
+			emb1 = discord.Embed(title = '**Итоги!**', description = f'**И так!\nВ этом бою побеждает....\n{ctx.author.mention}!!!!\nПоздравим! Он получает {amount}:💰:!**')
+			cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, ctx.author.id))
+			connection.commit()
+			await ctx.send( embed = emb1 )
+		else:
+			emb2 = discord.Embed(title = '**Итоги!**', description = f'**И так!\nВ этом бою побеждает....\n{member.mention}!!!!\nПоздравим! Он получает {amount}:💰:!**')
+			cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, member.id))
+			connection.commit()
+			await ctx.send( embed = emb2 )
 
-import discord,sqlite3,datetime
-from discord.ext import commands
- 
- 
-class marries(client):
- 
-    def __init__(self, Bot):
-        self.Bot = Bot
-    db = sqlite3.connect("Marry.db")
-    cursor = db.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS marrys(
-    id1 BIGINT,
-   id2 BIGINT,
-   datem TEXT
-   )""")
-    db.commit()
-    db.close()
- 
-    @client.command()
-    async def marry(ctx, user:discord.User= None):
-        db = sqlite3.connect("Marry.db")
-        cursor = db.cursor()
-        no_one = []
-        if user != None:
-            if user == ctx.message.author:
-                await ctx.send('Вы не можете жениться на себе')
-            else:
-                cursor.execute(f"SELECT * FROM marrys WHERE id1='{ctx.message.author.id}' OR id2='{ctx.message.author.id}'")
-                res = cursor.fetchall()
-                cursor.execute(f"SELECT * FROM marrys WHERE id1='{user.id}' OR id2='{user.id}'")
-                res1 = cursor.fetchall()
-                if not res:
-                    await ctx.send(f'{user.mention}, хотите ли вы поженеться с {ctx.message.author.mention}? (Напишите : Да или Нет)')
-                    try:
-                        msg = await self.Bot.wait_for('message', timeout=300.0, check=lambda message: message.author == user)
-                    except asyncio.TimeoutError:
-                        await ctx.send('Увы, но время ожидание вышло.')
-                        db.close()
-                    else:
-                        if msg.content.lower() == 'да':
-                            cursor.execute(f"INSERT INTO marrys(id1, id2, datem) VALUES({ctx.message.author.id}, {user.id}, '{datetime.date.today()}')")
-                            db.commit()
-                            await ctx.send(f'Поздровляю! Теперь {ctx.message.author.mention} и {user.mention} женаты!')  
-                            db.close()
-                        elif msg.content.lower() == 'нет':
-                            await ctx.send(f'{ctx.message.author.mention}, мне жаль, но вам отказали.')
-                            db.close()
-                else:
-                    if not res == no_one:
-                        await ctx.send('Вы уже женаты')
-                    elif not res1 == no_one:
-                        await ctx.send('Этот пользователь уже женат.')
-                db.close()            
-        elif user == None:
-            cursor.execute(f"SELECT * FROM marrys WHERE id1='{ctx.message.author.id}' OR id2='{ctx.message.author.id}'")
-            res = cursor.fetchall()
-            if not res:
-                await ctx.send('Вы не женаты.')
-                db.close()
-            else:
-                res = res[0]
-                if res[0] == ctx.message.author.id:
-                    await ctx.send(f"Вы женаты с {self.Bot.get_user(res[1])}, вы женились {res[2].replace('-', '.')}")  
-                    db.close()
-                elif res[1] == ctx.message.author.id:
-                    await ctx.send(f"Вы женаты с {self.Bot.get_user(res[0])}, вы женились {res[2].replace('-', '.')}")
-                    db.close()
- 
- 
-    @client.command()
-    async def divorce(ctx):
-        db = sqlite3.connect("Marry.db")
-        cursor = db.cursor()
-        cursor.execute(f"SELECT * FROM marrys WHERE id1='{ctx.message.author.id}' OR id2='{ctx.message.author.id}'")
-        res = cursor.fetchall()
-        if not res:
-            await ctx.send('Вы не женаты.')
-            db.close()
-        else:
-            await ctx.send(f'Вы точно хотите развестись?(Напишите : Да или Нет)')
-            try:
-                msg = await self.Bot.wait_for('message', timeout=10.0, check=lambda message: message.author == ctx.author)
-            except asyncio.TimeoutError:
-                await ctx.send('Увы, но время ожидание вышло.')
-                db.close()
-            else:
-                if msg.content.lower() == 'да':
-                    cursor.execute(f"DELETE FROM marrys WHERE id1='{ctx.message.author.id}' OR id2='{ctx.message.author.id}'")
-                    db.commit()
-                    db.close()
-                    await ctx.send('Вы развелись.')
-                elif msg.content.lower() == 'нет':
-                    await ctx.send('Вы отменили команду.')
-                    db.close()
- 
- 
-def setup(Bot):
-    Bot.add_cog(marries(Bot))
-    print('[Cog] Marry загружжен!')
 
 @client.command(aliases =['монетка', 'bf'])
 async def coin_flip(ctx, amount, arg):
@@ -498,69 +401,69 @@ async def coin_flip(ctx, amount, arg):
 
 @client.command()
 async def rep(ctx, member: discord.Member = None):
-    if member is None:
-        await ctx.send(f'{ctx.author.mention}, вы не указали пользователя!')
-    elif ctx.author == member:
-        await ctx.send(f'{ctx.author.mention}, ты конечно извени но себе ты не сможешь дать репу!')
-    else:
-        cursor.execute("UPDATE users SET rep = rep + {} WHERE id = {}".format(1, member.id))
-        connection.commit()
-        emb = discord.Embed(title = '**Успешно!**', description = f"""У пользователя {member.name} была повышена репутация!\nТекущия репутация: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺!""")
-        await ctx.send(embed = emb)
+	if member is None:
+		await ctx.send(f'{ctx.author.mention}, вы не указали пользователя!')
+	elif ctx.author == member:
+		await ctx.send(f'{ctx.author.mention}, ты конечно извени но себе ты не сможешь дать репу!')
+	else:
+		cursor.execute("UPDATE users SET rep = rep + {} WHERE id = {}".format(1, member.id))
+		connection.commit()
+		emb = discord.Embed(title = '**Успешно!**', description = f"""У пользователя {member.name} была повышена репутация!\nТекущия репутация: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺!""")
+		await ctx.send(embed = emb)
  
-        if cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 20:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		if cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 20:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 30:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 30:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 40:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 40:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 50:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 50:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 60:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 60:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 70:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 70:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 80:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 80:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 90:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 90:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
  
-        elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 100:
-            cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
-            connection.commit()
-            await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
+		elif cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0] == 100:
+			cursor.execute("UPDATE users SET lvl = lvl + {} WHERE id = {}".format(1, member.id))
+			connection.commit()
+			await ctx.send(f'У пользователя {member.mention}, повыселcя уровень! Новый уровень: {cursor.execute("SELECT lvl FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺')
 
 @client.command()
 async def getrep(ctx, member: discord.Member = None):
-    if member is None:
-        emb = discord.Embed(title = '**Репутация**', description = f'**{ctx.author.name}, ваша репутация: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]}🔺!**', colour = discord.Color.red())
-        await ctx.send(embed = emb)
-    else:
-        emb1 = discord.Embed(title = '**Репутация**', description = f'**Репутация участника {member.mention}: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺!**', colour = discord.Color.red())
-        await ctx.send(embed = emb1)
+	if member is None:
+		emb = discord.Embed(title = '**Репутация**', description = f'**{ctx.author.name}, ваша репутация: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]}🔺!**', colour = discord.Color.red())
+		await ctx.send(embed = emb)
+	else:
+		emb1 = discord.Embed(title = '**Репутация**', description = f'**Репутация участника {member.mention}: {cursor.execute("SELECT rep FROM users WHERE id = {}".format(member.id)).fetchone()[0]}🔺!**', colour = discord.Color.red())
+		await ctx.send(embed = emb1)
 
 @client.command()
 async def help(ctx):
@@ -585,4 +488,4 @@ async def help(ctx):
 
 token = os.environ.get("BOT_TOKEN")
 
-client.run(token)
+client.run(config.settings['TOKEN'])
