@@ -483,6 +483,7 @@ async def help(ctx):
 	emb.add_field(name = 'buy', value = 'Покупка роли упаминание роли после команды')
 	emb.add_field(name = 'rep', value = '+Репутцаия чеовеку которого вы упамянули')
 	emb.add_field(name = 'getrep', value = 'Посмотреть сколько репы у вас или у друга')
+	emb.add_field(name = 'duel', value = 'Дуель с другом на сумму которую вы поставите!')
 	await ctx.send(embed = emb)
 
 
