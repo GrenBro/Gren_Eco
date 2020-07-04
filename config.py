@@ -1,5 +1,6 @@
 settings = {
-	'TOKEN': 'token',
-	"NAME BOT": 'Gren_eco',
-	'ID': 723987130287652988,
+	'NAME BOT': 'GREN_eco',
+	'ID': 724612794103889960,
 	'PREFIX': '.'
+
+}
