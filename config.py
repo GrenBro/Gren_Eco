@@ -1,5 +1,5 @@
 settings = {
-	"NAME BOT": 'Gren_eco',
+	"NAME BOT": 'greneco',
 	'ID': 723987130287652988,
 	'PREFIX': '.'
 }
