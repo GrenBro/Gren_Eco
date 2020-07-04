@@ -325,6 +325,7 @@ async def __casino(ctx, amount: int = None):
 					LVL -= amount
 					cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id = {ctx.author.id}")
 					connection.commit()
+					
 
 @client.command()
 async def duel(ctx, member: discord.Member = None, amount: int = None ):
