@@ -492,4 +492,4 @@ async def help(ctx):
 
 token = os.environ.get("BOT_TOKEN")
 
-client.run(config.settings['TOKEN'])
+client.run( token )
