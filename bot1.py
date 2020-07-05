@@ -146,6 +146,34 @@ async def temp_ban(ctx, user : discord.Member, arg):
         user = ban_entry.user #Тут мы получаем имя пользевателя без @ и теперь оно выгледет name#1234
     await ctx.guild.unban(user)
 
+    @client.command()
+    @commands.has_permissions( administrator = True )
+    async def unban( self, ctx, *, member: discord.User):
+        client = self.client
+
+        banned_users = await ctx.guild.bans()
+
+        for ban_entry in banned_users:
+            user = ban_entry.user
+
+            if ( user.name, user.discriminator ) == ( member.name, member.discriminator ):
+                await ctx.guild.unban( user )
+
+                emb = discord.Embed( description = f'**{ctx.message.author.mention} Разбанил {member.mention}**' , colour = discord.Color.green() )
+                emb.set_author( name = ctx.author.name, icon_url = ctx.author.avatar_url )
+                emb.set_footer( text = Footer, icon_url = client.user.avatar_url )
+                
+                await ctx.send( embed = emb )
+
+                emb = discord.Embed( description = f'**Вы были разбанены на сервере {ctx.guild.name}**', colour = discord.Color.green() )
+
+                emb.set_author( name = ctx.author.name, icon_url = ctx.author.avatar_url )
+                emb.set_footer( text = Footer, icon_url = client.user.avatar_url )
+
+                await member.send( embed = emb )
+                
+                return
+
 @client.command()
 async def report(ctx, member:discord.Member=None, *, arg=None):
 	message = ctx.message
