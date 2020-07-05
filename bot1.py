@@ -130,6 +130,22 @@ async def __buy(ctx, role: discord.Role = None):
 			cursor.execute("UPDATE users SET cash = cash - {0} WHERE id = {1}".format(cursor.execute("SELECT cost FROM shop WHERE role_id = {}".format(role.id)).fetchone()[0], ctx.author.id))
 			connection.commit()
 
+@bot.command()
+@commands.has_permissions( administrator = True )
+async def temp_ban(ctx, user : discord.Member, arg):
+    await user.ban(reason=None)
+    emb = discord.Embed( title = f'{user}', description = f'**Забанен на {arg} секунд:** {user}\n**Кем:** {ctx.author.name}' )
+    emb.set_thumbnail( url = f'{ctx.guild.icon_url}' )
+    await ctx.send(embed=emb)
+
+    await asyncio.sleep(int(arg))
+
+    banned_users = await ctx.guild.bans()#Получаю список забаненых
+    author = ctx.message.author.mention
+    for ban_entry in banned_users: 
+        user = ban_entry.user #Тут мы получаем имя пользевателя без @ и теперь оно выгледет name#1234
+    await ctx.guild.unban(user)
+
 @client.command()
 async def report(ctx, member:discord.Member=None, *, arg=None):
 	message = ctx.message
