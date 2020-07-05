@@ -47,7 +47,13 @@ async def on_ready():
 		cost BIGINT
 		)""")
 
-
+for guild in client.guilds:
+         for member in guild.members:
+             if cursor.execute(f"SELECT id FROM users WHERE id = {member.id}").fetchone() is None:
+                 cursor.execute(f"INSERT INTO users VALUES ('{member}', {member.id}, 0, 0, 0)")
+             else:
+                 pass
+	
 @client.event
 async def on_member_join(member):
 	if cursor.execute(f"SELECT id FROM users WHERE id = {member.id}").fetchone() is None:
