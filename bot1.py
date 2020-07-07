@@ -11,6 +11,8 @@ import random
 import asyncio
 import os
 import config
+from discord.ext import commands
+import discord,sqlite3,datetime
 
 client = commands.Bot(command_prefix= '.') 
 client.remove_command( 'help' ) 
