@@ -325,7 +325,7 @@ async def __add(ctx, member: discord.Member = None, amout: int = None):
 
 @client.command(aliases = ['take'])
 @commands.has_permissions( administrator = True )
-async def __t(ctx, member: discord.Member = None, amount = None):
+async def __take(ctx, member: discord.Member = None, amount = None):
 	if member is None:
 		await ctx.send(f"**{ctx.author}**, укажите пользователя")
 	else:
