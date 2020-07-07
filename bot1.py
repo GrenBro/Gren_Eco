@@ -335,7 +335,7 @@ async def __t(ctx, member: discord.Member = None, amount = None):
 			cursor.execute("UPDATE users SET cash = {} WHERE id = {}".format(0, member.id))
 			connection.commit()
 
-		elif amout < 1:
+		elif amout < 10:
 			await ctx.send(f"**{ctx.author}**, Укажи сумму больше 1")
 		else:
 			cursor.execute("UPDATE users SET cash = cash - {} WHERE id = {}".format(int(amount), member.id))
