@@ -75,7 +75,7 @@ async def on_member_join(member):
 
 async def on_redy():
         Bot = Bot
-    db = sqlite3.connect("Marry.db")
+    db = sqlite3.connect('Marry.db')
     cursor = db.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS marrys(
     id1 BIGINT,
