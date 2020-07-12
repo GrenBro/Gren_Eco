@@ -542,6 +542,8 @@ async def adm(ctx):
 	emb.add_field(name = 'clear', value = '✖Очистить чат не ограниченое каличество сообщений')
 	emb.add_field(name = 'add', value = '💰Выдача денег')
 	emb.add_field(name = 'take, t', value = '💰Забрать деньги')
+	emb.add_field(name = 'temp_ban', value = '✔Бан')
+	emb.add_field(name = 'unban', value = '✔Разбан')
 	await ctx.send(embed = emb)
 
 token = os.environ.get("BOT_TOKEN")
