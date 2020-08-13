@@ -132,7 +132,7 @@ async def __buy(ctx, role: discord.Role = None):
 			connection.commit()
 
 @client.command()
-async def report(ctx, member:discord.Member=None, *, arg=None):
+async def __report(ctx, member:discord.Member=None, *, arg=None):
 	message = ctx.message
 	channel = client.get_channel(473885901626540032)    
 	if member == None:
@@ -160,7 +160,7 @@ async def __balance(ctx, member: discord.Member = None):
 	connection.commit()
 
 @client.command()
-async def run(ctx, member: discord.Member = None, amount: int = 3000):
+async def __run(ctx, member: discord.Member = None, amount: int = 3000):
 	emb = discord.Embed(title = '**Гонка!!**', description = f'Пользователь: {ctx.author.name}, бросил вызов в гонке пользователю: {member.mention}! Гонка началась! Ожидайте 5 секунд', colour = discord.Color.red())
 	await ctx.send(embed = emb)
 	await asyncio.sleep(5)
@@ -182,14 +182,14 @@ async def kiss(ctx, member: discord.Member):
 	emb.set_thumbnail(url = 'https://d.radikal.ru/d43/2006/76/fb8f09103a8f.gif')
 	await ctx.send( embed = emb )
 
-@client.command()
-async def hug(ctx, member: discord.Member):
+@client.command(aliases = [hug], [объятия] )
+async def __hug(ctx, member: discord.Member):
 	emb = discord.Embed(title = '**Объятия!**', description = f'**Пользователь: {ctx.author.name}, обнял: {member.mention}!**', colour = discord.Color.blue())
 
 	await ctx.send(embed = emb)
 
 @client.command()
-async def mute(ctx, member: discord.Member, duration: int, *, arg):
+async def __mute(ctx, member: discord.Member, duration: int, *, arg):
 	emb = discord.Embed(title='MUTE')
 	role = discord.utils.get(ctx.guild.roles, name='Muted')
 	emb.add_field(name="Замутил:",
@@ -204,7 +204,7 @@ async def mute(ctx, member: discord.Member, duration: int, *, arg):
 	await member.remove_roles(role)
 
 @client.command(pass_context=True)
-async def profile(ctx):
+async def __profile(ctx):
 	roles = ctx.author.roles
 	role_list = ""
 	for role in roles:
@@ -299,7 +299,7 @@ async def __take(ctx, member: discord.Member = None, amount = None):
 
 @client.command()
 @commands.has_permissions( administrator = True )
-async def clear(ctx, amount=None):
+async def __clear(ctx, amount=None):
 	await ctx.channel.purge(limit=int(amount))
 	await ctx.channel.send(':: Сообщения успешно удалены ::')
 
