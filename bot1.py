@@ -182,7 +182,7 @@ async def kiss(ctx, member: discord.Member):
 	emb.set_thumbnail(url = 'https://d.radikal.ru/d43/2006/76/fb8f09103a8f.gif')
 	await ctx.send( embed = emb )
 
-@client.command(aliases = [hug], [объятия] )
+@client.command(aliases = [hug])
 async def __hug(ctx, member: discord.Member):
 	emb = discord.Embed(title = '**Объятия!**', description = f'**Пользователь: {ctx.author.name}, обнял: {member.mention}!**', colour = discord.Color.blue())
 
