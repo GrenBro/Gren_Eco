@@ -18,34 +18,21 @@ client.remove_command( 'help' )
 
 @client.event
 async def on_ready():
-	change_status.start()
-	connection.commit()
-	print('Bot online')
-	print(client.user.id)
-	print('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬')
-
+    cursor.execute("""CREATE TABLE IF NOT EXISTS users (
+        name TEXT,
+        id INT,
+        cash BIGINT,
+        rep INT,
+        lvl INT
+        )""")
+    connection.commit()
+    print('Bot online')
+    print(client.user.id)
+    print('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬')
 
 connection = sqlite3.connect('server.db')
 cursor = connection.cursor()
 connection.commit()
-
-
-@client.event
-async def on_ready():
-	cursor.execute("""CREATE TABLE IF NOT EXISTS users (
-		name TEXT,
-		id INT,
-		cash BIGINT,
-		rep INT,
-		lvl INT
-		)""")
-
-	cursor.execute("""CREATE TABLE IF NOT EXISTS shopbus(
-		role_id INT,
-		id INT,
-		cost BIGINT
-		)""")
-
 
 	
 for guild in client.guilds:
@@ -132,7 +119,7 @@ async def __buy(ctx, role: discord.Role = None):
 			connection.commit()
 
 @client.command()
-async def __report(ctx, member:discord.Member=None, *, arg=None):
+async def report(ctx, member:discord.Member=None, *, arg=None):
 	message = ctx.message
 	channel = client.get_channel(473885901626540032)    
 	if member == None:
@@ -160,7 +147,7 @@ async def __balance(ctx, member: discord.Member = None):
 	connection.commit()
 
 @client.command()
-async def __run(ctx, member: discord.Member = None, amount: int = 3000):
+async def run(ctx, member: discord.Member = None, amount: int = 3000):
 	emb = discord.Embed(title = '**Гонка!!**', description = f'Пользователь: {ctx.author.name}, бросил вызов в гонке пользователю: {member.mention}! Гонка началась! Ожидайте 5 секунд', colour = discord.Color.red())
 	await ctx.send(embed = emb)
 	await asyncio.sleep(5)
@@ -182,14 +169,14 @@ async def kiss(ctx, member: discord.Member):
 	emb.set_thumbnail(url = 'https://d.radikal.ru/d43/2006/76/fb8f09103a8f.gif')
 	await ctx.send( embed = emb )
 
-@client.command(aliases = [hug])
-async def __hug(ctx, member: discord.Member):
+@client.command()
+async def hug(ctx, member: discord.Member):
 	emb = discord.Embed(title = '**Объятия!**', description = f'**Пользователь: {ctx.author.name}, обнял: {member.mention}!**', colour = discord.Color.blue())
 
 	await ctx.send(embed = emb)
 
 @client.command()
-async def __mute(ctx, member: discord.Member, duration: int, *, arg):
+async def mute(ctx, member: discord.Member, duration: int, *, arg):
 	emb = discord.Embed(title='MUTE')
 	role = discord.utils.get(ctx.guild.roles, name='Muted')
 	emb.add_field(name="Замутил:",
@@ -204,7 +191,7 @@ async def __mute(ctx, member: discord.Member, duration: int, *, arg):
 	await member.remove_roles(role)
 
 @client.command(pass_context=True)
-async def __profile(ctx):
+async def profile(ctx):
 	roles = ctx.author.roles
 	role_list = ""
 	for role in roles:
@@ -291,13 +278,13 @@ async def __take(ctx, member: discord.Member = None, amount = None):
 			cursor.execute("UPDATE users SET cash = {} WHERE id = {}".format(0, member.id))
 			connection.commit()
 
-		elif amout < 10:
+		elif amount < 10:
 			await ctx.send(f"**{ctx.author}**, Укажи сумму больше 1")
 		else:
 			cursor.execute("UPDATE users SET cash = cash - {} WHERE id = {}".format(int(amount), member.id))
 			connection.commit()
 
-@client.command()
+@client.command(alises = ['clear'])
 @commands.has_permissions( administrator = True )
 async def __clear(ctx, amount=None):
 	await ctx.channel.purge(limit=int(amount))
@@ -387,9 +374,9 @@ async def duel(ctx, member: discord.Member = None, amount: int = None ):
 	elif amount is None:
 		await ctx.send('Укажите сумму за которую хотите биться!')
 	elif amount > cursor.execute("SELECT cash FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]:
-		await ctx.send(f'У вас не достаточно денег не балансе {PREFIX}cash!')
+		await ctx.send(f'У вас не достаточно денег не балансе (PREFIX)cash!')
 	elif amount > cursor.execute("SELECT cash FROM users WHERE id = {}".format(member.id)).fetchone()[0]:
-		await ctx.send(f'На балансе вашего противника не хватает денег! {PREFIX}cash!')
+		await ctx.send(f"На балансе вашего противника не хватает денег!")
 	else:
 		emb = discord.Embed(title = 'Бой', description = f'**Пользователь: {ctx.author.mention}, кинул вызов пользователю: {member.mention}!\n Бой начался!(ожидайте 5 секунд)**')
 		await ctx.send(embed = emb)
@@ -410,8 +397,8 @@ async def duel(ctx, member: discord.Member = None, amount: int = None ):
 
 
 
-@client.command()
-async def rep(ctx, member: discord.Member = None):
+@client.command(aliases = '[реп], [rep]')
+async def __rep(ctx, member: discord.Member = None):
 	if member is None:
 		await ctx.send(f'{ctx.author.mention}, вы не указали пользователя!')
 	elif ctx.author == member:
