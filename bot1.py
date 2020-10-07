@@ -322,7 +322,7 @@ async def __casino(ctx, amount: int = None):
 
 					
 
-@client.command(aliases =['монетка', 'bf'])
+@client.command(aliases =['bf'])
 async def coin_flip(ctx, amount, arg):
 	a = random.randint(0, 1)
 	if a == 0:
@@ -397,7 +397,7 @@ async def duel(ctx, member: discord.Member = None, amount: int = None ):
 
 
 
-@client.command(aliases = '[реп], [rep]')
+@client.command(aliases =['rep'])
 async def __rep(ctx, member: discord.Member = None):
 	if member is None:
 		await ctx.send(f'{ctx.author.mention}, вы не указали пользователя!')
