@@ -482,4 +482,4 @@ async def adm(ctx):
 
 token = os.environ.get("BOT_TOKEN")
 
-client.run( token )
+client.run( NzI0NjEyNzk0MTAzODg5OTYw.XvCuQA.D_cMbWQVIfs-U4g6rbYYL11-Ic0 )
