@@ -15,7 +15,6 @@ import config
 client = commands.Bot(command_prefix= ';') 
 client.remove_command( 'help' ) 
 
-
 @client.event
 async def on_ready():
     cursor.execute("""CREATE TABLE IF NOT EXISTS users (
@@ -28,13 +27,11 @@ async def on_ready():
     connection.commit()
     print('Bot online')
     print(client.user.id)
-    print('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬')
 
 connection = sqlite3.connect('server.db')
 cursor = connection.cursor()
 connection.commit()
 
-	
 for guild in client.guilds:
 	for member in guild.members:
 		if cursor.execute(f"SELECT id FROM users WHERE id = {member.id}").fetchone() is None:
@@ -55,8 +52,6 @@ async def on_member_join(member):
 	else:
 		pass
 
- 
-
 @client.command(aliases = ['add-shop'])
 @commands.has_permissions( administrator = True )
 async def __add_shop(ctx, role: discord.Role = None, cost: int = None):
@@ -73,7 +68,6 @@ async def __add_shop(ctx, role: discord.Role = None, cost: int = None):
 			emb = discord.Embed(title = 'Успешно', description = 'Роль была успешно добавлена в магазин!:white_check_mark:', colour = discord.Color.green())
 			await ctx.send(embed=emb)
 
-
 @client.command(aliases = ['remove-shop'])
 @commands.has_permissions( administrator = True )
 async def __remove_shop(ctx, role: discord.Role = None):
@@ -84,7 +78,6 @@ async def __remove_shop(ctx, role: discord.Role = None):
 		connection.commit()
 		emb = discord.Embed(title = 'Успешно', description = 'Роль была успешно Удалена с магазина!:white_check_mark:', colour = discord.Color.red())
 		await ctx.send(embed=emb)
-
 
 @client.command(aliases = ['shop'])
 async def __shop(ctx):
@@ -101,8 +94,6 @@ async def __shop(ctx):
 						pass
 
 	await ctx.send(embed = embed)
-
-
 
 @client.command(aliases = ['buy', 'buy role'])
 async def __buy(ctx, role: discord.Role = None):
@@ -251,7 +242,6 @@ async def __work(ctx):
 	cursor.execute(f"UPDATE users SET cash = {LVL} WHERE id={ctx.author.id}")
 	connection.commit()
 
-
 @client.command(aliases = ['add'])
 @commands.has_permissions( administrator = True )
 async def __add(ctx, member: discord.Member = None, amout: int = None):
@@ -292,7 +282,6 @@ async def __clear(ctx, amount=None):
 
 #econom
 
-
 @client.command(aliases = ['casino', 'cs'])
 async def __casino(ctx, amount: int = None):
 	if amount == None:
@@ -318,9 +307,7 @@ async def __casino(ctx, amount: int = None):
 					embed.add_field(name = 'Результ', value = '```Вы выйграли```', inline = False)
 					embed.set_footer(text = f'Ваш баланс составляет: {cursor.execute(f"SELECT cash FROM users WHERE id = {ctx.author.id}").fetchone()[0]} :💰:')
 					await ctx.send(embed = embed)
-					connection.commit()
-
-					
+					connection.commit()				
 
 @client.command(aliases =['bf'])
 async def coin_flip(ctx, amount, arg):
@@ -362,7 +349,6 @@ async def coin_flip(ctx, amount, arg):
 	 await message.remove_reaction(payload.emoji, member)
 	 print('[SUCCESS] Too many roles for user {0.display_name}'.format(member)'''
 
-
 @client.command()
 async def duel(ctx, member: discord.Member = None, amount: int = None ):
 	a = random.randint(1, 2)
@@ -393,9 +379,6 @@ async def duel(ctx, member: discord.Member = None, amount: int = None ):
 			cursor.execute("UPDATE users SET cash = cash + {} WHERE id = {}".format(amount, member.id))
 			connection.commit()
 			await ctx.send( embed = emb2 )
-
-
-
 
 @client.command(aliases =['rep'])
 async def __rep(ctx, member: discord.Member = None):
@@ -496,8 +479,6 @@ async def adm(ctx):
 	emb.add_field(name = 'temp_ban', value = '✔Бан')
 	emb.add_field(name = 'unban', value = '✔Разбан')
 	await ctx.send(embed = emb)
-
-
 
 token = os.environ.get("BOT_TOKEN")
 
